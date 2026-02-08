@@ -11,7 +11,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Instalar dependencias
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copiar código fuente
 COPY . .
