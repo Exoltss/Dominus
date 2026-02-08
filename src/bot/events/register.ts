@@ -13,7 +13,7 @@ export function registerEvents(client: Client) {
     
     // Set bot status
     client.user?.setPresence({
-      activities: [{ name: '<:right:1469546411849678919> Dominus unique account | Beware of scams ', type: 3 }],
+      activities: [{ name: '🔒 Protecting your deals', type: 3 }],
       status: 'online',
     });
   });
