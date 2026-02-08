@@ -365,14 +365,35 @@ export function registerButtonHandlers(client: Client) {
               return;
             }
 
+            // Calculate service fee based on deal amount (USD)
+            const dealAmountUsd = parseFloat(deal.amount);
+            let serviceFeeUsd = 0;
+            
+            if (dealAmountUsd < 10) {
+              serviceFeeUsd = 0; // Free
+            } else if (dealAmountUsd < 100) {
+              serviceFeeUsd = 1; // $1
+            } else if (dealAmountUsd < 200) {
+              serviceFeeUsd = 2; // $2
+            } else {
+              serviceFeeUsd = dealAmountUsd * 0.02; // 2%
+            }
+
             // Convert deal amount (USD) to crypto - this is what seller should get
             const dealCryptoAmount = await import('../../utils/price-converter').then(m => 
-              m.convertUsdToCrypto(parseFloat(deal.amount), deal.cryptocurrency)
+              m.convertUsdToCrypto(dealAmountUsd, deal.cryptocurrency)
             );
-            const dealCryptoNum = dealCryptoAmount;
+            
+            // Convert service fee (USD) to crypto - this stays in escrow wallet
+            const serviceFeeInCrypto = await import('../../utils/price-converter').then(m => 
+              m.convertUsdToCrypto(serviceFeeUsd, deal.cryptocurrency)
+            );
 
-            // Calculate amount to send with proper fee reserves
+            // Amount to send to seller = deal amount ONLY (not including service fee)
+            const dealCryptoNum = dealCryptoAmount;
             let amountToSend: string = dealCryptoAmount.toString();
+            
+            logger.info(`Deal #${dealNumber} - Deal: $${dealAmountUsd} | Service Fee: $${serviceFeeUsd.toFixed(2)} (${serviceFeeInCrypto.toFixed(8)} ${deal.cryptocurrency}) | Seller gets: ${dealCryptoAmount} ${deal.cryptocurrency}`);
             
             // For ETH, reserve some for gas
             if (deal.cryptocurrency === 'ETH') {
@@ -652,8 +673,34 @@ export function registerButtonHandlers(client: Client) {
             return;
           }
 
-          // Calculate amount (similar to automatic release)
-          let amountToSend = balance;
+          // Calculate service fee (same logic as automatic release)
+          const dealAmountUsd = parseFloat(deal.amount);
+          let serviceFeeUsd = 0;
+          
+          if (dealAmountUsd < 10) {
+            serviceFeeUsd = 0; // Free
+          } else if (dealAmountUsd < 100) {
+            serviceFeeUsd = 1; // $1
+          } else if (dealAmountUsd < 200) {
+            serviceFeeUsd = 2; // $2
+          } else {
+            serviceFeeUsd = dealAmountUsd * 0.02; // 2%
+          }
+
+          // Convert deal amount to crypto - seller should get THIS amount
+          const dealCryptoAmount = await import('../../utils/price-converter').then(m => 
+            m.convertUsdToCrypto(dealAmountUsd, deal.cryptocurrency)
+          );
+          
+          // Convert service fee to crypto - stays in wallet
+          const serviceFeeInCrypto = await import('../../utils/price-converter').then(m => 
+            m.convertUsdToCrypto(serviceFeeUsd, deal.cryptocurrency)
+          );
+
+          // Amount to send = deal amount ONLY (not service fee)
+          let amountToSend = dealCryptoAmount.toString();
+          
+          logger.info(`[ADMIN SEND] Deal #${deal.dealNumber} - Seller gets: ${dealCryptoAmount} ${deal.cryptocurrency} | Service Fee retained: ${serviceFeeInCrypto.toFixed(8)} ${deal.cryptocurrency}`);
           
           if (deal.cryptocurrency === 'ETH') {
             const gasReserve = 0.005;
