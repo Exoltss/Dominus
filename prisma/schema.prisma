@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  discordId     String   @unique
+  discordTag    String
+  isBlacklisted Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  dealsAsBuyer  Deal[] @relation("BuyerDeals")
+  dealsAsSeller Deal[] @relation("SellerDeals")
+  auditLogs     AuditLog[]
+  credits       UserCredits?
+  xtoolsTasks   XToolsTask[]
+  creditTransactions CreditTransaction[]
+}
+
+model Deal {
+  id                String   @id @default(uuid())
+  dealNumber        Int      @unique
+  status            String   @default("CREATED")
+  
+  buyerId           String
+  buyer             User     @relation("BuyerDeals", fields: [buyerId], references: [id])
+  
+  sellerId          String
+  seller            User     @relation("SellerDeals", fields: [sellerId], references: [id])
+  
+  cryptocurrency    String
+  amount            String
+  feePercentage     String
+  feeAmount         String?
+  
+  description       String
+  
+  depositAddress    String?
+  depositTxHash     String?
+  depositConfirmed  Boolean  @default(false)
+  confirmations     Int      @default(0)
+  
+  releaseTxHash     String?
+  releasedAt        DateTime?
+  
+  cancelReason      String?
+  cancelledBy       String?
+  cancelledAt       DateTime?
+  
+  disputeReason     String?
+  disputeOpenedAt   DateTime?
+  disputeResolvedAt DateTime?
+  
+  expiresAt         DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  creatorLanguage   String   @default("es")
+  buyerLanguage     String?
+  
+  wallet            Wallet?
+  auditLogs         AuditLog[]
+}
+
+model Wallet {
+  id              String   @id @default(uuid())
+  dealId          String   @unique
+  deal            Deal     @relation(fields: [dealId], references: [id])
+  
+  cryptocurrency  String
+  address         String
+  privateKey      String
+  publicKey       String?
+  derivationPath  String
+  
+  balance         String   @default("0")
+  lastChecked     DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  details     String?
+  ipAddress   String?
+  
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  dealId      String?
+  deal        Deal?    @relation(fields: [dealId], references: [id])
+  
+  createdAt   DateTime @default(now())
+}
+
+model UserCredits {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  
+  credits     Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model XToolsTask {
+  id          String   @id @default(uuid())
+  taskId      String   @unique
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  endpoint    String
+  status      String   @default("PENDING")
+  requestData String?
+  result      String?
+  creditCost  Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completedAt DateTime?
+}
+
+model CreditTransaction {
+  id          String   @id @default(uuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  amount      Int
+  type        String
+  reason      String?
+  
+  adminId     String?
+  balanceBefore Int
+  balanceAfter  Int
+  
+  createdAt   DateTime @default(now())
+}
+
