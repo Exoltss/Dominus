@@ -192,37 +192,39 @@ export function registerEvents(client: Client) {
           )
           .setTimestamp();
 
-        // Add fields for each deal
-        dealsWithFunds.slice(0, 10).forEach(deal => {
-          adminEmbed.addFields({
-            name: `Deal #${deal.dealNumber} - ${deal.cryptocurrency}`,
-            value: 
-              `Status: \`${deal.status}\`\n` +
-              `Amount: $${deal.amount}\n` +
-              `Wallet: \`${deal.wallet?.address.substring(0, 20)}...\`\n` +
-              `Buyer: ${deal.buyer.discordTag}\n` +
-              `Seller: ${deal.seller.discordTag}`,
-            inline: false,
-          });
-        });
+import { Deal } from '@prisma/client'; // Agrega esto al inicio del archivo
 
-        const selectMenu = new StringSelectMenuBuilder()
-          .setCustomId('admin_select_deal')
-          .setPlaceholder('Select a deal to manage')
-          .addOptions(
-            dealsWithFunds.slice(0, 25).map(deal => ({
-              label: `Deal #${deal.dealNumber} - ${deal.cryptocurrency}`,
-              description: `$${deal.amount} - Status: ${deal.status}`,
-              value: deal.dealNumber.toString(),
-            }))
-          );
+// Add fields for each deal
+dealsWithFunds.slice(0, 10).forEach((deal: Deal) => { // <-- aquí agregamos el tipo
+  adminEmbed.addFields({
+    name: `Deal #${deal.dealNumber} - ${deal.cryptocurrency}`,
+    value: 
+      `Status: \`${deal.status}\`\n` +
+      `Amount: $${deal.amount}\n` +
+      `Wallet: \`${deal.wallet?.address.substring(0, 20)}...\`\n` +
+      `Buyer: ${deal.buyer.discordTag}\n` +
+      `Seller: ${deal.seller.discordTag}`,
+    inline: false,
+  });
+});
 
-        const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+const selectMenu = new StringSelectMenuBuilder()
+  .setCustomId('admin_select_deal')
+  .setPlaceholder('Select a deal to manage')
+  .addOptions(
+    dealsWithFunds.slice(0, 25).map((deal: Deal) => ({ // <-- y aquí también
+      label: `Deal #${deal.dealNumber} - ${deal.cryptocurrency}`,
+      description: `$${deal.amount} - Status: ${deal.status}`,
+      value: deal.dealNumber.toString(),
+    }))
+  );
 
-        await message.channel.send({
-          embeds: [adminEmbed],
-          components: [row],
-        });
+const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+
+await message.channel.send({
+  embeds: [adminEmbed],
+  components: [row],
+});
 
         // Delete the command message
         await message.delete().catch(() => {});
