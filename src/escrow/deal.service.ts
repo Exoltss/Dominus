@@ -49,6 +49,8 @@ export class DealService {
       const buyer = await this.getOrCreateUser(params.buyerDiscordId, params.buyerDiscordTag);
       const seller = await this.getOrCreateUser(params.sellerDiscordId, params.sellerDiscordTag);
 
+      logger.info(`[DEAL] Buyer: ${buyer.discordTag}, Seller: ${seller.discordTag}`);
+
       if (buyer.isBlacklisted || seller.isBlacklisted) {
         throw new Error('One of the users is blacklisted');
       }
@@ -75,6 +77,8 @@ export class DealService {
         },
       });
 
+      logger.info(`Deal #${dealNumber} created in database, now generating ${params.cryptocurrency} wallet...`);
+      
       const wallet = await BlockchainFactory.generateWallet(params.cryptocurrency, dealNumber);
 
       await prisma.wallet.create({

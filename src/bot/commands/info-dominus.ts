@@ -169,11 +169,21 @@ export function registerInfoDominusHandlers(client: Client) {
       } catch (error: any) {
         logger.error('Error showing info panel:', error);
         
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: '❌ Error al mostrar la información / Error showing information',
-            ephemeral: true,
-          });
+        // Don't try to respond if interaction expired
+        if (error.code === 10062 || error.code === 40060) {
+          logger.warn('[INFO-DOMINUS] Interaction expired');
+          return;
+        }
+        
+        try {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({
+              content: '❌ Error al mostrar la información / Error showing information',
+              ephemeral: true,
+            });
+          }
+        } catch (replyError) {
+          logger.error('[INFO-DOMINUS] Failed to send error message:', replyError);
         }
       }
     }
