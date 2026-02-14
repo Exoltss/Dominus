@@ -22,11 +22,21 @@ export abstract class BaseWalletService {
     // For now, generate or use from env
     const seedPhrase = process.env.MASTER_SEED_PHRASE;
     
+    console.log('[WALLET] MASTER_SEED_PHRASE exists:', !!seedPhrase);
+    console.log('[WALLET] MASTER_SEED_PHRASE length:', seedPhrase ? seedPhrase.length : 0);
+    
     if (!seedPhrase) {
       throw new Error('MASTER_SEED_PHRASE not configured');
     }
     
     if (!bip39.validateMnemonic(seedPhrase)) {
+      console.log('[WALLET] Invalid mnemonic, checking if quoted...');
+      // Maybe it's wrapped in quotes - try removing them
+      const cleaned = seedPhrase.replace(/^["']|["']$/g, '');
+      if (bip39.validateMnemonic(cleaned)) {
+        console.log('[WALLET] Using cleaned mnemonic (quotes removed)');
+        return cleaned;
+      }
       throw new Error('Invalid master seed phrase');
     }
     

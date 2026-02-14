@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { logger } from './utils/logger';
 import { loadCommands } from './bot/commands/loader';
 import { registerEvents } from './bot/events/register';
+import { startVouchSystem } from './bot/services/vouch.service';
 
 dotenv.config();
 
@@ -30,6 +31,9 @@ async function startBot() {
 
     await client.login(process.env.DISCORD_TOKEN);
     logger.info('Bot conectado a Discord');
+    
+    // Start vouch system
+    startVouchSystem(client);
   } catch (error) {
     logger.error('Error al iniciar el bot:', error);
     process.exit(1);

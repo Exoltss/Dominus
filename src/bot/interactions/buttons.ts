@@ -184,7 +184,13 @@ export function registerButtonHandlers(client: Client) {
     if (interaction.customId.startsWith('rescan_')) {
       const dealNumber = interaction.customId.replace('rescan_', '');
       
-      await interaction.deferReply({ ephemeral: true });
+      try {
+        await interaction.deferReply({ ephemeral: true });
+      } catch (deferError: any) {
+        // Interaction expired
+        logger.warn('[RESCAN] Interaction defer failed (expired):', deferError?.message);
+        return;
+      }
 
       try {
         const deal = await prisma.deal.findFirst({
@@ -205,6 +211,7 @@ export function registerButtonHandlers(client: Client) {
         }
 
         // Check balance on blockchain
+        console.log('[RESCAN] Getting balance for:', deal.cryptocurrency, deal.wallet.address);
         const balance = await BlockchainFactory.getBalance(
           deal.cryptocurrency as any,
           deal.wallet.address
@@ -271,10 +278,24 @@ export function registerButtonHandlers(client: Client) {
         logger.info(`Rescan performed for deal #${dealNumber} - Balance: ${balance}`);
 
       } catch (error) {
+        console.error('[RESCAN] Full error:', error);
         logger.error('Error rescanning payment:', error);
-        await interaction.editReply({
-          content: '❌ Error checking payment. The blockchain service may be unavailable.',
-        });
+        
+        // Check if we can respond
+        try {
+          if (interaction.deferred) {
+            await interaction.editReply({
+              content: '❌ Error checking payment. The blockchain service may be unavailable.',
+            });
+          } else if (!interaction.replied) {
+            await interaction.reply({
+              content: '❌ Error checking payment. The blockchain service may be unavailable.',
+              ephemeral: true,
+            });
+          }
+        } catch (replyError) {
+          logger.warn('[RESCAN] Could not send error message:', replyError);
+        }
       }
     }
 
@@ -506,6 +527,12 @@ export function registerButtonHandlers(client: Client) {
               .setTimestamp();
 
             await channel.send({ embeds: [completeEmbed] });
+            
+            // Also send to the specific logs channel
+            const logsChannel = interaction.guild?.channels.cache.get('1470144219673788538');
+            if (logsChannel && logsChannel.isTextBased()) {
+              await logsChannel.send({ embeds: [completeEmbed] });
+            }
 
             logger.info(`Deal #${dealNumber} completed - Real TX: ${txHash} - Sent to ${receivingAddress}`);
 
@@ -539,12 +566,17 @@ export function registerButtonHandlers(client: Client) {
           logger.error('Error waiting for address:', error);
         }
 
-      } catch (error) {
+      } catch (error: any) {
+        console.error('[RELEASE_FUNDS] Error:', error);
         logger.error('Error releasing funds:', error);
-        await interaction.reply({
-          content: t('language.error_fund_release', 'es'),
-          ephemeral: true,
-        });
+        try {
+          await interaction.reply({
+            content: t('language.error_fund_release', 'es'),
+            ephemeral: true,
+          });
+        } catch (replyError) {
+          logger.warn('[RELEASE_FUNDS] Could not send error reply:', replyError);
+        }
       }
     }
 

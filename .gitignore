@@ -28,6 +28,14 @@ lerna-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Python (if any)
+*.pyc
+__pycache__/
+
+# Local files not to push
+vouch.py
+mm.py
 *.swp
 *.swo
 *~
