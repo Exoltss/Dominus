@@ -1,5 +1,5 @@
 import { Client, TextChannel, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } from 'discord.js';
-import { config } from '../config';
+import { config } from '../../config';
 
 const VOUCH_CHANNEL_ID = '1470144219673788538';
 

@@ -23,7 +23,7 @@ export async function execute(interaction: ChatInputCommandInteraction, client: 
   const recipientAddress = interaction.options.getString('address', true);
 
   // Check if user is admin
-  const admi384067604899430430nIds = config.admin.userIds;
+  const adminIds = config.admin.userIds;
   if (!adminIds.includes(interaction.user.id)) {
     await interaction.reply({
       content: '❌ No tienes permiso para usar este comando',
