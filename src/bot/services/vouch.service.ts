@@ -61,9 +61,9 @@ export function startVouchSystem(client: Client) {
     setTimeout(() => sendVouch(client), 60000);
   }
   
-  // Then send vouches every 4-10 minutes
+  // Then send vouches every 15-45 minutes
   const scheduleNextVouch = () => {
-    const delay = Math.floor(randomInRange(240, 600)) * 1000; // 4-10 minutes
+    const delay = Math.floor(randomInRange(900, 2700)) * 1000; // 15-45 minutes
     
     vouchInterval = setTimeout(async () => {
       if (isVouchingEnabled) {
