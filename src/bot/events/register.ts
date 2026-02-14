@@ -5,6 +5,7 @@ import { registerTicketHandler, registerCloseTicketHandler } from '../interactio
 import { registerXToolsHandlers } from '../interactions/xtools';
 import { registerInfoDominusHandlers } from '../commands/info-dominus';
 import { t, createTranslatedEmbed } from '../../i18n/translator';
+import { Deal } from '@prisma/client'; // Agrega esto al inicio del archivo
 
 export function registerEvents(client: Client) {
   client.once('ready', () => {
@@ -192,7 +193,6 @@ export function registerEvents(client: Client) {
           )
           .setTimestamp();
 
-import { Deal } from '@prisma/client'; // Agrega esto al inicio del archivo
 
 // Add fields for each deal
 dealsWithFunds.slice(0, 10).forEach((deal: Deal) => { // <-- aquí agregamos el tipo
