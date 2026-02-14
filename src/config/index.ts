@@ -43,6 +43,7 @@ export const config = {
   
   security: {
     encryptionKey: process.env.ENCRYPTION_KEY!,
+    masterSeedPhrase: process.env.MASTER_SEED_PHRASE,
     masterSeedEncrypted: process.env.MASTER_SEED_ENCRYPTED,
   },
   

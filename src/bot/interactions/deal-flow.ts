@@ -475,6 +475,12 @@ async function selectFeePayer(
   }
 
   if (feeAmount === 0) {
+    // Defer the interaction to avoid timeout while creating deal
+    try {
+      await channel.send({ content: '⏳ Creating deal, please wait...' });
+    } catch (e) {
+      // Ignore send errors
+    }
     await createDealAndInvoice(channel, buyer, seller, crypto, amount, 'none', 0, ticketNumber, creatorLang, buyerLang);
     return;
   }
