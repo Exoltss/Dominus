@@ -117,8 +117,6 @@ export async function startDealFlow(channel: TextChannel, crypto: string, ticket
           
           langCollector.stop();
         });
-
-        await btnInteraction.deferUpdate();
       } else if (btnInteraction.customId === 'receiver_btn') {
         const warningEmbed = createTranslatedEmbed(
           {

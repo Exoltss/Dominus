@@ -32,32 +32,32 @@ export function registerButtonHandlers(client: Client) {
           .setPlaceholder(t('commands.panel.select_placeholder', lang))
           .addOptions([
             {
-              label: '<:bitcoin:1470055178337128582> Bitcoin (BTC)',
+              label: 'Bitcoin (BTC)',
               description: lang === 'es' ? 'Crear deal de Bitcoin' : 'Create Bitcoin escrow deal',
               value: 'BTC',
             },
-            {          
-              label: '<:eth:1469542703091155189> Ethereum (ETH)',
+            {
+              label: 'Ethereum (ETH)',
               description: lang === 'es' ? 'Crear deal de Ethereum' : 'Create Ethereum escrow deal',
               value: 'ETH',
             },
             {
-              label: '<:solana:1469543005038968965> Solana (SOL)',
+              label: 'Solana (SOL)',
               description: lang === 'es' ? 'Crear deal de Solana' : 'Create Solana escrow deal',
               value: 'SOL',
             },
             {
-              label: '<:litecoin:1469543266608480400> Litecoin (LTC)',
+              label: 'Litecoin (LTC)',
               description: lang === 'es' ? 'Crear deal de Litecoin' : 'Create Litecoin escrow deal',
               value: 'LTC',
             },
             {
-              label: '<:tether:1469543477309345852> Tether (USDT)',
+              label: 'Tether (USDT)',
               description: lang === 'es' ? 'Crear deal de USDT' : 'Create USDT escrow deal',
               value: 'USDT',
             },
             {
-              label: '<:usd:1469543935297716415> USD Coin (USDC)',
+              label: 'USD Coin (USDC)',
               description: lang === 'es' ? 'Crear deal de USDC' : 'Create USDC escrow deal',
               value: 'USDC',
             },

@@ -7,6 +7,9 @@ import {
   ComponentType,
   Message,
   TextChannel,
+  Client,
+  EmbedBuilder,
+  GuildTextBasedChannel,
 } from 'discord.js';
 import { DealService } from '../../escrow/deal.service';
 import { BlockchainFactory } from '../../blockchain/factory';
@@ -303,6 +306,9 @@ async function processTransaction(
     await DealService.releaseFunds(deal.id, txHash);
     await DealService.updateDealStatus(deal.id, 'COMPLETED');
 
+    // Send deal completion embed to log channel
+    await sendDealCompletionEmbed(interaction.client, deal, txHash);
+
     // Success message
     const successEmbed = createTranslatedEmbed(
       {
@@ -339,5 +345,60 @@ async function processTransaction(
     await channel.send({
       content: t('commands.confirm_received.error_processing', lang),
     });
+  }
+}
+
+async function sendDealCompletionEmbed(client: Client, deal: any, txHash: string) {
+  try {
+    const completionChannelId = '1470144219673788538';
+    const channel = await client.channels.fetch(completionChannelId) as GuildTextBasedChannel;
+    
+    if (!channel) {
+      logger.error(`Completion channel ${completionChannelId} not found`);
+      return;
+    }
+
+    // Get blockchain explorer URL based on cryptocurrency
+    const explorerUrl = getExplorerUrl(deal.cryptocurrency, txHash);
+
+    const completionEmbed = new EmbedBuilder()
+      .setColor(0x26AD10) // Green
+      .setTitle(`Deal Completed - ${deal.cryptocurrency}`)
+      .addFields(
+        { name: 'Amount', value: `${deal.amount}`, inline: true },
+        { name: 'Sender', value: deal.seller ? `<@${deal.seller.discordId}>` : 'N/A', inline: true },
+        { name: 'Receiver', value: deal.buyer ? `<@${deal.buyer.discordId}>` : 'N/A', inline: true },
+        { 
+          name: 'Transaction', 
+          value: `[${txHash.substring(0, 12)}...${txHash.substring(txHash.length - 6)}](${explorerUrl})`, 
+          inline: false 
+        }
+      )
+      .setTimestamp();
+
+    await channel.send({ embeds: [completionEmbed] });
+    logger.info(`Deal completion embed sent to channel ${completionChannelId}`);
+  } catch (error) {
+    logger.error('Error sending deal completion embed:', error);
+  }
+}
+
+function getExplorerUrl(crypto: string, txHash: string): string {
+  const cryptoUpper = crypto.toUpperCase();
+  
+  switch (cryptoUpper) {
+    case 'BTC':
+      return `https://www.blockchain.com/btc/tx/${txHash}`;
+    case 'ETH':
+    case 'USDT':
+    case 'USDC':
+      return `https://etherscan.io/tx/${txHash}`;
+    case 'SOL':
+      return `https://solscan.io/tx/${txHash}`;
+    case 'LTC':
+      return `https://litecoinblockchain.info/tx/${txHash}`;
+    default:
+      const cryptoLower = crypto.toLowerCase();
+      return `https://explorer.${cryptoLower}.com/tx/${txHash}`;
   }
 }

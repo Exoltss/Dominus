@@ -48,38 +48,38 @@ export function registerEvents(client: Client) {
           .setPlaceholder(t('commands.panel.select_placeholder', lang))
           .addOptions([
             {
-              label: '<:sec:1469544385057128640> Select Currency',
+              label: 'Select Currency',
               description: 'Choose a cryptocurrency to start',
               value: 'SELECT',
               default: true,
             },
             {
-              label: '<:bitcoin:1470055178337128582> Bitcoin (BTC)',
+              label: 'Bitcoin (BTC)',
               description: 'Create Bitcoin escrow deal',
               value: 'BTC',
             },
             {
-              label: '<:eth:1469542703091155189> Ethereum (ETH)',
+              label: 'Ethereum (ETH)',
               description: 'Create Ethereum escrow deal',
               value: 'ETH',
             },
             {
-              label: '<:solana:1469543005038968965> Solana (SOL)',
+              label: 'Solana (SOL)',
               description: 'Create Solana escrow deal',
               value: 'SOL',
             },
             {
-              label: '<:litecoin:1469543266608480400> Litecoin (LTC)',
+              label: 'Litecoin (LTC)',
               description: 'Create Litecoin escrow deal',
               value: 'LTC',
             },
             {
-              label: '<:tether:1469543477309345852> Tether (USDT)',
+              label: 'Tether (USDT)',
               description: 'Create USDT escrow deal',
               value: 'USDT',
             },
             {
-              label: '<:usd:1469543935297716415> USD Coin (USDC)',
+              label: 'USD Coin (USDC)',
               description: 'Create USDC escrow deal',
               value: 'USDC',
             },

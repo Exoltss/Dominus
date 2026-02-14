@@ -11,7 +11,7 @@ import {
   OverwriteResolvable,
 } from 'discord.js';
 import { logger } from '../../utils/logger';
-import { startDealFlow } from './deal-flow';
+import { startDealFlow } from '../interactions/deal-flow';
 import { PrismaClient } from '@prisma/client';
 import { BlockchainFactory } from '../../blockchain/factory';
 import { t } from '../../i18n/translator';
@@ -310,7 +310,7 @@ export function registerTicketHandler(client: Client) {
 
       await ticketChannel.send(lang === 'es'
         ? `${otherUser.toString()} | Usuario añadido a la transacción actual <:check:1469545502184968282>`
-        : `${otherUser.toString()} | User added to current transaction <:check:1469545630957854731>`);
+        : `${otherUser.toString()} | User added to current transaction <:check:1469545502184968282>`);
 
       // Start the deal flow in the ticket with language
       setTimeout(() => {
