@@ -37,6 +37,15 @@ export class DealService {
 
   static async createDeal(params: CreateDealParams) {
     try {
+      logger.info(`[DEAL] Starting deal creation for ${params.cryptocurrency} ${params.amount}`);
+      
+      // Check if MASTER_SEED_PHRASE is configured
+      const seedPhrase = process.env.MASTER_SEED_PHRASE;
+      if (!seedPhrase) {
+        logger.error('[DEAL] MASTER_SEED_PHRASE environment variable is not set!');
+        throw new Error('MASTER_SEED_PHRASE not configured. Please set the MASTER_SEED_PHRASE environment variable.');
+      }
+      
       const buyer = await this.getOrCreateUser(params.buyerDiscordId, params.buyerDiscordTag);
       const seller = await this.getOrCreateUser(params.sellerDiscordId, params.sellerDiscordTag);
 

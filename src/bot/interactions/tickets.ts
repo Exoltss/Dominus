@@ -131,7 +131,14 @@ export function registerTicketHandler(client: Client) {
 
       if (!guild || !member) return;
 
-      await interaction.deferReply({ ephemeral: true });
+      // Try to defer the interaction, but handle if it expires
+      try {
+        await interaction.deferReply({ ephemeral: true });
+      } catch (deferError: any) {
+        logger.warn('Interaction defer failed (likely expired):', deferError?.message);
+        // If defer fails, we can't continue with this interaction
+        return;
+      }
 
       // Create ticket channel
       const ticketNumber = Date.now().toString().slice(-6);
@@ -321,11 +328,26 @@ export function registerTicketHandler(client: Client) {
 
     } catch (error) {
       logger.error('Error creating ticket:', error);
-      await interaction.editReply({
-        content: lang === 'es'
-          ? '<:wrong:1469544804206776412> | Error creando el ticket. Por favor intenta de nuevo.'
-          : '<:wrong:1469544804206776412> | Error creating ticket. Please try again.',
-      });
+      
+      // Check if we can edit the reply or need to send a new message
+      try {
+        if (interaction.deferred) {
+          await interaction.editReply({
+            content: lang === 'es'
+              ? '<:wrong:1469544804206776412> | Error creando el ticket. Por favor intenta de nuevo.'
+              : '<:wrong:1469544804206776412> | Error creating ticket. Please try again.',
+          });
+        } else if (!interaction.replied) {
+          await interaction.reply({
+            content: lang === 'es'
+              ? '<:wrong:1469544804206776412> | Error creando el ticket. Por favor intenta de nuevo.'
+              : '<:wrong:1469544804206776412> | Error creating ticket. Please try again.',
+            ephemeral: true,
+          });
+        }
+      } catch (replyError) {
+        logger.error('Error sending error response to interaction:', replyError);
+      }
     }
   });
 }
@@ -356,8 +378,26 @@ export function registerCloseTicketHandler(client: Client) {
         await interaction.channel?.delete();
       }, 10000);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error closing ticket:', error);
+      
+      // Don't try to respond if interaction expired
+      if (error.code === 10062 || error.code === 40060) {
+        logger.warn('[TICKETS] Interaction expired while closing ticket');
+        return;
+      }
+      
+      // Try to send error message
+      try {
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: '❌ Error closing ticket | Error cerrando ticket',
+            ephemeral: true,
+          });
+        }
+      } catch (replyError) {
+        logger.error('[TICKETS] Failed to send error message:', replyError);
+      }
     }
   });
 

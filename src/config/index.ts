@@ -73,6 +73,7 @@ function validateConfig() {
     'DISCORD_CLIENT_ID',
     'DATABASE_URL',
     'ENCRYPTION_KEY',
+    'MASTER_SEED_PHRASE',
   ];
   
   const missing = required.filter(key => !process.env[key]);

@@ -300,7 +300,14 @@ async function confirmRoles(
         
         collector.stop('both_confirmed');
         setTimeout(async () => {
-          await msg.delete();
+          try {
+            await msg.delete();
+          } catch (deleteError: any) {
+            // Message may already be deleted or not exist
+            if (deleteError.code !== 10008) {
+              logger.warn('[DEAL_FLOW] Could not delete message:', deleteError?.message);
+            }
+          }
           await requestAmount(channel, buyer, seller, crypto, ticketNumber, creatorLang, buyerLang);
         }, 2000);
       }
@@ -407,6 +414,12 @@ async function confirmAmount(
   });
 
   collector.on('collect', async (btnInteraction) => {
+    // Prevent double-clicks from causing errors
+    if (btnInteraction.replied || btnInteraction.deferred) {
+      logger.warn('[DEAL_FLOW] Confirm amount button already handled, ignoring duplicate click');
+      return;
+    }
+    
     // Determine language for the user
     const userLang = btnInteraction.user.id === buyer.id && buyerLang ? buyerLang : creatorLang;
     
@@ -499,6 +512,12 @@ async function selectFeePayer(
   });
 
   collector.on('collect', async (btnInteraction) => {
+    // Prevent double-clicks from causing errors
+    if (btnInteraction.replied || btnInteraction.deferred) {
+      logger.warn('[DEAL_FLOW] Button already handled, ignoring duplicate click');
+      return;
+    }
+    
     let feePayer = 'none';
     if (btnInteraction.customId === 'sender_pays_fee') feePayer = 'buyer';
     else if (btnInteraction.customId === 'receiver_pays_fee') feePayer = 'seller';
@@ -546,6 +565,8 @@ async function createDealAndInvoice(
   buyerLang?: Language | null
 ) {
   try {
+    logger.info(`[DEAL_FLOW] Creating deal and invoice: ${crypto} ${amount} feePayer=${feePayer} feeAmount=${feeAmount}`);
+    
     // Calculate service fee (profit for escrow service)
     const serviceFeePercentage = 2.0; // 2% service fee
     const serviceFeeUsd = parseFloat(amount) * (serviceFeePercentage / 100);
@@ -664,7 +685,11 @@ async function createDealAndInvoice(
     logger.info(`Deal #${deal.dealNumber} created in ticket ${channel.name}`);
 
   } catch (error) {
-    logger.error('Error creating deal invoice:', error);
-    await channel.send(t('language.failed_create_deal', creatorLang));
+    logger.error('[DEAL_FLOW] Error creating deal invoice:', error);
+    try {
+      await channel.send(t('language.failed_create_deal', creatorLang));
+    } catch (sendError) {
+      logger.error('[DEAL_FLOW] Failed to send error message to channel:', sendError);
+    }
   }
 }

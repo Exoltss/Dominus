@@ -65,27 +65,46 @@ export function registerButtonHandlers(client: Client) {
 
         const cryptoRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(cryptoSelect);
 
-        await interaction.reply({
-          embeds: [panelEmbed],
-          components: [cryptoRow],
-          ephemeral: true,
-        });
-
-        logger.info(`Panel shown in ${lang} for ${interaction.user.tag}`);
+        try {
+          await interaction.reply({
+            embeds: [panelEmbed],
+            components: [cryptoRow],
+            ephemeral: true,
+          });
+          logger.info(`Panel shown in ${lang} for ${interaction.user.tag}`);
+        } catch (replyError: any) {
+          // Handle interaction timeout/expired errors gracefully
+          if (replyError.code === 10062 || replyError.code === 40060) {
+            logger.warn(`[BUTTONS] Interaction expired or already handled for ${interaction.customId}`);
+            return;
+          }
+          // Re-throw other errors
+          throw replyError;
+        }
       } catch (error: any) {
         logger.error('Error showing panel:', error);
         
+        // Don't try to respond if interaction expired or already handled
+        if (error.code === 10062 || error.code === 40060) {
+          logger.warn('[BUTTONS] Interaction expired, cannot send error message');
+          return;
+        }
+        
         // Try to respond with error message
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: '❌ Error al mostrar el panel | Error showing panel\n\nError: ' + error.message,
-            ephemeral: true,
-          });
-        } else {
-          await interaction.followUp({
-            content: '❌ Error al mostrar el panel | Error showing panel\n\nError: ' + error.message,
-            ephemeral: true,
-          });
+        try {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({
+              content: '❌ Error al mostrar el panel | Error showing panel\n\nError: ' + error.message,
+              ephemeral: true,
+            });
+          } else {
+            await interaction.followUp({
+              content: '❌ Error al mostrar el panel | Error showing panel\n\nError: ' + error.message,
+              ephemeral: true,
+            });
+          }
+        } catch (replyError) {
+          logger.error('[BUTTONS] Failed to send error message:', replyError);
         }
       }
       return;
